@@ -10,7 +10,7 @@
   },
   {
     "__type__": "cc.Scene",
-    "_name": "Startscene",
+    "_name": "Game",
     "_objFlags": 0,
     "_parent": null,
     "_children": [
@@ -25,7 +25,7 @@
     "_globals": {
       "__id__": 17
     },
-    "_id": "bbc9a8c4-c690-4797-a831-2a213575059e"
+    "_id": "3c76670b-824b-40f1-bdfc-cdfd08113a95"
   },
   {
     "__type__": "cc.Node",
@@ -371,7 +371,7 @@
     "fileId": "e8a+bU/8dPDbbJguUzLdoF"
   },
   {
-    "__type__": "144eaUepu5InoEo+qUOYaWv",
+    "__type__": "650feQW0uVLfKhYV2ZZJeJL",
     "_name": "",
     "_objFlags": 0,
     "node": {
@@ -379,7 +379,10 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_id": "4eVpHjDapKU5s7PhDUPhL9"
+    "label": {
+      "__id__": 8
+    },
+    "_id": "e9RWDIzK9JsbJ77H1Jueov"
   },
   {
     "__type__": "cc.SceneGlobals",

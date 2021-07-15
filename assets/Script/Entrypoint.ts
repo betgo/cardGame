@@ -1,21 +1,20 @@
 
-import { _decorator, Component, Node } from 'cc';
+import { _decorator, Component, Node, Label, director, } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('Entrypoint')
 export class Entrypoint extends Component {
-    // [1]
-    // dummy = '';
 
-    // [2]
-    // @property
-    // serializableDummy = 0;
+
+    @property(Label)
+    label: Label = null!;
 
     start() {
-        // [3]
-        console.log('aaaaaaaaaaaaaaaaaa');
-        
-        ll.MyTest.Log();
+        this.label.string = "这是加载场景"
+        setTimeout(() => {
+            director.loadScene('StartGame')
+        }, 1000);
+
     }
 
     // update (deltaTime: number) {
@@ -23,13 +22,3 @@ export class Entrypoint extends Component {
     // }
 }
 
-/**
- * [1] Class member could be defined like this.
- * [2] Use `property` decorator if your want the member to be serializable.
- * [3] Your initialization goes here.
- * [4] Your update function goes here.
- *
- * Learn more about scripting: https://docs.cocos.com/creator/3.0/manual/en/scripting/
- * Learn more about CCClass: https://docs.cocos.com/creator/3.0/manual/en/scripting/ccclass.html
- * Learn more about life-cycle callbacks: https://docs.cocos.com/creator/3.0/manual/en/scripting/life-cycle-callbacks.html
- */
