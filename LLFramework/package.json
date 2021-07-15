@@ -1,0 +1,32 @@
+{
+  "name": "llframework",
+  "version": "1.0.0",
+  "description": "cocos creator 3.0 game framework plugin ",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "echo 构建任务开始",
+    "build": "gulp build",
+    "postbuild": "echo 构建任务结束"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "author": "wxx",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.6.0",
+    "babel-preset-es2016": "^6.24.1",
+    "browserify": "^14.3.0",
+    "gulp-babel": "^8.0.0",
+    "gulp-inject-string": "^1.1.2",
+    "gulp-minify": "^3.1.0",
+    "gulp-uglify": "^3.0.2",
+    "tsify": "^3.0.1",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.9.0",
+    "gulp": "^4.0.2",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "typescript": "^4.3.5"
+  }
+}
