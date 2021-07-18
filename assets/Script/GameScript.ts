@@ -1,5 +1,6 @@
 
 import { _decorator, Component, Node, Label } from 'cc';
+import GameCtrl from './GameCtrl';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameScript')
@@ -8,13 +9,17 @@ export class GameScript extends Component {
     @property(Label)
     label: Label = null!;
 
+    private _gameCtrl: GameCtrl = new GameCtrl();
     start() {
         this.label.string = "这里是游戏场景"
     }
 
-    // update (deltaTime: number) {
-    //     // [4]
-    // }
+    constructor() {
+        super();
+        this._gameCtrl.start();
+        console.log(this._gameCtrl.pokers);
+
+    }
 }
 
 /**
