@@ -737,7 +737,9 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "playBtn": null,
+    "playBtn": {
+      "__id__": 18
+    },
     "_id": "4eZDeM/W1JApsOpwlY8XeA"
   },
   {

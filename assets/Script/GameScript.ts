@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, Label } from 'cc';
+import { _decorator, Component, Label, Prefab, Node } from 'cc';
 import GameCtrl from './GameCtrl';
 const { ccclass, property } = _decorator;
 
@@ -8,18 +8,22 @@ export class GameScript extends Component {
 
     @property(Label)
     label: Label = null!;
+    @property(Node)
+    container: Node = null!;
 
-    private _gameCtrl: GameCtrl = new GameCtrl();
+    @property(Prefab)
+    pokerPrefab: Prefab = null!;
+
+    private _gameCtrl: GameCtrl = null!;
     start() {
         this.label.string = "这里是游戏场景"
-    }
-
-    constructor() {
-        super();
+        this._gameCtrl = new GameCtrl();
+        this._gameCtrl.Init(this.container, this.pokerPrefab)
         this._gameCtrl.start();
         console.log(this._gameCtrl.pokers);
-
     }
+
+
 }
 
 /**
