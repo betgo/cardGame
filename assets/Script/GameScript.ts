@@ -6,8 +6,7 @@ const { ccclass, property } = _decorator;
 @ccclass('GameScript')
 export class GameScript extends Component {
 
-    @property(Label)
-    label: Label = null!;
+
     @property(Node)
     container: Node = null!;
 
@@ -16,7 +15,6 @@ export class GameScript extends Component {
 
     private _gameCtrl: GameCtrl = null!;
     start() {
-        this.label.string = "这里是游戏场景"
         this._gameCtrl = new GameCtrl();
         this._gameCtrl.Init(this.container, this.pokerPrefab)
         this._gameCtrl.start();
