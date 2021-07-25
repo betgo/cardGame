@@ -1,8 +1,9 @@
 
 import { _decorator, Component, Node, Prefab, instantiate } from 'cc';
+import Poker from '../Poker/Poker';
+import { UIPoker } from '../Poker/UIPoker';
 
-import Poker from './Poker/Poker';
-import { UIPoker } from './Poker/UIPoker';
+
 const { ccclass, property } = _decorator;
 
 @ccclass('GameView')

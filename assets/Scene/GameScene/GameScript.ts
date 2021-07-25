@@ -1,6 +1,7 @@
 
 import { _decorator, Component, Label, Prefab, Node, instantiate } from 'cc';
-import { GameView } from '../View/GameView';
+import { GameView } from '../../View/GameView/GameView';
+
 import GameCtrl from './GameCtrl';
 const { ccclass, property } = _decorator;
 
@@ -19,7 +20,6 @@ export class GameScript extends Component {
         this._gameCtrl = new GameCtrl();
         this._gameCtrl.Init(this._gameView)
         this._gameCtrl.start();
-        console.log(this._gameCtrl.pokers);
     }
 
 
