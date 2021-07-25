@@ -1,6 +1,7 @@
 import { instantiate, Prefab, Node } from "cc";
-import Poker from "../Config/Poker";
-import { UIpoker } from "./UIpoker";
+import Poker from "../View/Poker/Poker";
+import { GameView } from "../View/GameView";
+
 
 /**
  * 游戏牌局管理者
@@ -8,13 +9,11 @@ import { UIpoker } from "./UIpoker";
 export default class GameCtrl {
     pokers: Poker[] = [];
 
-    private pokerContainer: Node | null = null;
-    private pokerPrefab: Prefab = null!;
+    private m_GameView: GameView = null!;
 
 
-    public Init(pokerContainer: Node, pokerPrefab: Prefab) {
-        this.pokerContainer = pokerContainer;
-        this.pokerPrefab = pokerPrefab;
+    public Init(gameView: GameView) {
+        this.m_GameView = gameView;
     }
 
     public start() {
@@ -25,17 +24,14 @@ export default class GameCtrl {
                 this.pokers.push(poker)
             }
         }
-        this.pokers.forEach((poker) => {
-            let uiPoker = this.CreateUIPoker(poker)
-            this.pokerContainer?.addChild(uiPoker.node);
-        })
+        this.m_GameView.CreatePokers(this.pokers);
     }
 
-    private CreateUIPoker(poker: Poker): UIpoker {
-        let uipokerNode = instantiate(this.pokerPrefab)
-        let uipoker: UIpoker = uipokerNode.getComponent(UIpoker)!;
-        uipoker.init(poker)
-        uipoker.node.setPosition(Math.random() * 400 - 200, Math.random() * 400-200)
-        return uipoker
-    }
+    // private CreateUIPoker(poker: Poker): UIPoker {
+    //     let uipokerNode = instantiate(this.pokerPrefab)
+    //     let uipoker: UIPoker = uipokerNode.getComponent(UIPoker)!;
+    //     uipoker.init(poker)
+    //     uipoker.node.setPosition(Math.random() * 400 - 200, Math.random() * 400 - 200)
+    //     return uipoker
+    // }
 }

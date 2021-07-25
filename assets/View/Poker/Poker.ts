@@ -1,4 +1,5 @@
-import { SuitEnum } from "./ConfigEnum";
+import { SuitEnum } from "../../Config/ConfigEnum";
+
 
 export default class Poker {
     public point: number = -1;
