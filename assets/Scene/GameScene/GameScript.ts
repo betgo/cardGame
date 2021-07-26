@@ -1,8 +1,8 @@
 
 import { _decorator, Component, Label, Prefab, Node, instantiate } from 'cc';
-import { GameView } from '../../View/GameView/GameView';
 
 import GameCtrl from './GameCtrl';
+import { GameView } from './GameView/GameView';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameScript')

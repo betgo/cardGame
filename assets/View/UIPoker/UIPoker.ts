@@ -1,7 +1,7 @@
 
 import { _decorator, Component, Node, Label, Sprite, SpriteFrame, Color, color } from 'cc';
 import { SuitEnum } from '../../Config/ConfigEnum';
-import Poker from './Poker';
+import { Poker } from '../../Scene/GameScene/GameDB';
 const { ccclass, property } = _decorator;
 
 const PONIT_MAP = {

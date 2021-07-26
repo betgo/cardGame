@@ -1,7 +1,7 @@
 
 import { _decorator, Component, Node, Prefab, instantiate } from 'cc';
-import Poker from '../Poker/Poker';
-import { UIPoker } from '../Poker/UIPoker';
+import { UIPoker } from '../../../View/UIPoker/UIPoker';
+import GameDB, { Poker } from '../GameDB';
 
 
 const { ccclass, property } = _decorator;
@@ -17,14 +17,15 @@ export class GameView extends Component {
     @property(Node) playGroupAchor: Node = null!;
 
     private playGroupList: Node[] = []
-
+    private m_GameDB: GameDB = null!;
 
     start() {
 
     }
 
-    CreatePokers(pokers: Poker[]) {
-        pokers.forEach((poker, index) => {
+    InitWithDB(DB: GameDB) {
+        this.m_GameDB = DB
+        this.m_GameDB.closeAreaPokers.forEach((poker, index) => {
             let uiPoker = this.CreateUIPoker(poker)
             uiPoker.node.setPosition(0.5 * index, 0)
             this.closeSendArea?.addChild(uiPoker.node);
