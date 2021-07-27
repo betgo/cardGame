@@ -20,6 +20,7 @@ export default class GameCtrl {
     public start() {
         console.log('start');
         this.m_GameView.InitPokers(this.m_GameDB.pokers);
+        this.m_GameView.start();
     }
 
 

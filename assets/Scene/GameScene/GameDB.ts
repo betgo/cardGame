@@ -58,7 +58,7 @@ export default class GameDB {
         // 初始化牌局
         for (let point = 1; point <= 13; point++) {
             for (let suit = 0; suit < 4; suit++) {
-                let poker = new Poker(point, suit, EpokerStatus.CLOSE);
+                let poker = new Poker(point, suit, EpokerStatus.OPEN);
                 this.pokers.push(poker)
             }
         }

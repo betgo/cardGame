@@ -18,9 +18,13 @@ export class GameView extends Component {
     @property(Node) playGroupAchor: Node = null!;
 
     private playGroupList: Node[] = []
-    private m_GameDB: GameDB = null!;
 
     start() {
+        for (let i = 0; i < this.initArea.children.length; i++) {
+            let child = this.initArea.children[i];
+            this.closeSendArea.addChild(child)
+        }
+        this.initArea.removeAllChildren();
 
     }
 
