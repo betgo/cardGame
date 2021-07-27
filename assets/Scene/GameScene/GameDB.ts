@@ -1,19 +1,14 @@
-
-
-export enum SuitEnum {
-    Spades = 0,
-    Hearts = 1,
-    Clubs = 2,
-    Diamonds = 3,
-}
+import { EpokerStatus, SuitEnum } from "../../Config/ConfigEnum";
 
 export class Poker {
     public point: number = -1;
     public suit: SuitEnum = SuitEnum.Clubs
+    public status: EpokerStatus = EpokerStatus.CLOSE
 
-    constructor(point?: number, suit?: SuitEnum) {
-        if (point) this.point = point
-        if (suit) this.suit = suit
+    constructor(point: number, suit: SuitEnum, status: EpokerStatus) {
+        this.point = point
+        this.suit = suit
+        this.status = status
     }
 }
 
@@ -63,7 +58,7 @@ export default class GameDB {
         // 初始化牌局
         for (let point = 1; point <= 13; point++) {
             for (let suit = 0; suit < 4; suit++) {
-                let poker = new Poker(point, suit);
+                let poker = new Poker(point, suit, EpokerStatus.CLOSE);
                 this.pokers.push(poker)
             }
         }

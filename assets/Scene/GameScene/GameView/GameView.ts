@@ -11,6 +11,7 @@ export class GameView extends Component {
 
     @property(Prefab) pokerPrefab: Prefab = null!;
 
+    @property(Node) initArea: Node = null!;
     @property(Node) closeSendArea: Node = null!;
     @property(Node) openSendArea: Node = null!;
     @property([Node]) receiveAreaList: Node[] = [];
@@ -23,12 +24,11 @@ export class GameView extends Component {
 
     }
 
-    InitWithDB(DB: GameDB) {
-        this.m_GameDB = DB
-        this.m_GameDB.closeAreaPokers.forEach((poker, index) => {
+    InitPokers(pokers: Poker[]) {
+        pokers.forEach((poker, index) => {
             let uiPoker = this.CreateUIPoker(poker)
             uiPoker.node.setPosition(0.5 * index, 0)
-            this.closeSendArea?.addChild(uiPoker.node);
+            this.initArea?.addChild(uiPoker.node);
         })
     }
     private CreateUIPoker(poker: Poker): UIPoker {

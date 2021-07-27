@@ -4,3 +4,8 @@ export enum SuitEnum {
     Clubs = 2,
     Diamonds = 3,
 }
+
+export enum EpokerStatus {
+    CLOSE = 0,
+    OPEN = 1,
+}

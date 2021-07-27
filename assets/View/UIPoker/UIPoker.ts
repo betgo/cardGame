@@ -1,6 +1,6 @@
 
 import { _decorator, Component, Node, Label, Sprite, SpriteFrame, Color, color } from 'cc';
-import { SuitEnum } from '../../Config/ConfigEnum';
+import { EpokerStatus, SuitEnum } from '../../Config/ConfigEnum';
 import { Poker } from '../../Scene/GameScene/GameDB';
 const { ccclass, property } = _decorator;
 
@@ -32,6 +32,7 @@ export class UIPoker extends Component {
     // RESOURCE
     @property(Sprite) TexFrontBg: Sprite = null!;
     @property(Sprite) TexBackBg: Sprite = null!;
+    @property(Sprite) Back: Sprite = null!;
     @property([SpriteFrame]) suitList: SpriteFrame[] = [];
     @property([SpriteFrame]) suitListSmall: SpriteFrame[] = [];
     @property([SpriteFrame]) TexFaces: SpriteFrame[] = [];
@@ -48,11 +49,19 @@ export class UIPoker extends Component {
         this.number.string = `${PONIT_MAP[poker.point + '']}`;
         this.number.color = (poker.suit === SuitEnum.Clubs || poker.suit === SuitEnum.Spades) ? this.blackTextColor : this.redTextColor
         this.suitSmall.spriteFrame = this.suitListSmall[poker.suit]
+        this.setStatus(poker.status)
     }
 
     start() {
 
     }
+    setStatus(status: EpokerStatus) {
+        if (status === EpokerStatus.CLOSE) {
+            this.Back.node.active = true
+        } else {
+            this.Back.node.active = false
 
+        }
+    }
 
 }
