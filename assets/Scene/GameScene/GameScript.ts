@@ -19,9 +19,12 @@ export class GameScript extends Component {
         this.node.addChild(this._gameView.node)
         this._gameCtrl = new GameCtrl();
         this._gameCtrl.Init(this._gameView)
-        this._gameCtrl.start();
+        this._gameCtrl.Play();
     }
 
+    onDestroy() {
+        this._gameCtrl.Exit();
+    }
 
 }
 

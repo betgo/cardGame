@@ -1,4 +1,5 @@
 import { EpokerStatus, SuitEnum } from "../../Config/ConfigEnum";
+import { GAMEVENT } from "./GameEvent";
 
 export class Poker {
     public point: number = -1;
@@ -40,7 +41,11 @@ export default class GameDB {
     /********************************************
      * Public  API
      ********************************************/
-
+    public Play() {
+        [this._closeAreaPokers, this._pokers] = [this._pokers, this.closeAreaPokers]
+        // 通知UI层 ，发生变化
+        ll.EventManager.getInstance().emit(GAMEVENT.PLAY, this._pokers)
+    }
 
     /********************************************
      * private  API
@@ -58,10 +63,12 @@ export default class GameDB {
         // 初始化牌局
         for (let point = 1; point <= 13; point++) {
             for (let suit = 0; suit < 4; suit++) {
-                let poker = new Poker(point, suit, EpokerStatus.OPEN);
+                let poker = new Poker(point, suit, EpokerStatus.CLOSE);
                 this.pokers.push(poker)
             }
         }
+        // 派发初始牌局事件
+        ll.EventManager.getInstance().emit(GAMEVENT.INIT_POKER, this._pokers)
     }
 
     /********************************************

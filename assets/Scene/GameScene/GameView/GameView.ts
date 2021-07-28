@@ -19,28 +19,43 @@ export class GameView extends Component {
 
     private playGroupList: Node[] = []
 
-    start() {
+    /********************************************
+     * LifeCycle
+    ********************************************/
+    InitPokers(pokers: Poker[]) {
+        // 创建扑克UI
+        pokers.forEach((poker, index) => {
+            let uiPoker = this.CreateUIPoker(poker)
+            uiPoker.node.setPosition(0.2 * index, 0.2 * index)
+            this.initArea?.addChild(uiPoker.node);
+        })
+    }
+
+    /********************************************
+     * Public  API
+    ********************************************/
+    public OnEventInit(pokers: Poker[]) {
+        this.InitPokers(pokers)
+    }
+    public OnEventPlay() {
+        this.OnPlay();
+    }
+    /********************************************
+     * private  API
+    ********************************************/
+    private CreateUIPoker(poker: Poker): UIPoker {
+        let uipokerNode = instantiate(this.pokerPrefab)
+        let uipoker: UIPoker = uipokerNode.getComponent(UIPoker)!;
+        uipoker.init(poker)
+        return uipoker
+    }
+
+    private OnPlay() {
         for (let i = 0; i < this.initArea.children.length; i++) {
             let child = this.initArea.children[i];
             this.closeSendArea.addChild(child)
         }
         this.initArea.removeAllChildren();
-
-    }
-
-    InitPokers(pokers: Poker[]) {
-        pokers.forEach((poker, index) => {
-            let uiPoker = this.CreateUIPoker(poker)
-            uiPoker.node.setPosition(0.5 * index, 0)
-            this.initArea?.addChild(uiPoker.node);
-        })
-    }
-    private CreateUIPoker(poker: Poker): UIPoker {
-        let uipokerNode = instantiate(this.pokerPrefab)
-        let uipoker: UIPoker = uipokerNode.getComponent(UIPoker)!;
-        uipoker.init(poker)
-        // uipoker.node.setPosition(Math.random() * 400 - 200, Math.random() * 400 - 200)
-        return uipoker
     }
 
 }
