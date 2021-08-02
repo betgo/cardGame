@@ -40,7 +40,10 @@ export class UIPoker extends Component {
     private redTextColor = color(183, 23, 40);
     private blackTextColor = Color.BLACK;
 
+    private _poker: Poker = null!;
     init(poker: Poker) {
+        poker.Bind(this)
+        this._poker = poker
         if (poker.point < 11) {
             this.suit.spriteFrame = this.suitList[poker.suit]
         } else {
@@ -49,14 +52,15 @@ export class UIPoker extends Component {
         this.number.string = `${PONIT_MAP[poker.point + '']}`;
         this.number.color = (poker.suit === SuitEnum.Clubs || poker.suit === SuitEnum.Spades) ? this.blackTextColor : this.redTextColor
         this.suitSmall.spriteFrame = this.suitListSmall[poker.suit]
-        this.setStatus(poker.status)
+        this.refresh()
     }
 
     start() {
 
     }
-    setStatus(status: EpokerStatus) {
-        if (status === EpokerStatus.CLOSE) {
+
+    refresh() {
+        if (this._poker.status === EpokerStatus.CLOSE) {
             this.Back.node.active = true
         } else {
             this.Back.node.active = false

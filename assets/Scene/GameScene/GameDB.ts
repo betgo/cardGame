@@ -1,15 +1,25 @@
 import { EpokerStatus, SuitEnum } from "../../Config/ConfigEnum";
+import { UIPoker } from "../../View/UIPoker/UIPoker";
 import { GAMEVENT } from "./GameEvent";
 
 export class Poker {
     public point: number = -1;
     public suit: SuitEnum = SuitEnum.Clubs
     public status: EpokerStatus = EpokerStatus.CLOSE
+    private _view: UIPoker | null = null;
 
+    public get view() { return this._view }
     constructor(point: number, suit: SuitEnum, status: EpokerStatus) {
         this.point = point
         this.suit = suit
         this.status = status
+    }
+
+    public Bind(view: UIPoker) {
+        this._view = view
+    }
+    public UnBind() {
+        this._view = null;
     }
 }
 
@@ -18,6 +28,10 @@ export class PokerGroup {
     private _pokers: Poker[] = [];
     public get pokers(): Poker[] {
         return this._pokers;
+    }
+
+    public AddPoker(poker: Poker) {
+        this._pokers.push(poker)
     }
 }
 
@@ -45,6 +59,22 @@ export default class GameDB {
         [this._closeAreaPokers, this._pokers] = [this._pokers, this.closeAreaPokers]
         // 通知UI层 ，发生变化
         ll.EventManager.getInstance().emit(GAMEVENT.PLAY, this._pokers)
+
+        // 发牌
+        for (let cards = GameDB.CONST_PLAY_GROUPS; cards >= 1; cards--) {
+            for (let i = 0; i < cards; i++) {
+                let cardGroupIndex = GameDB.CONST_PLAY_GROUPS - cards + i;
+                let cardGroup: PokerGroup = this._playAreaPokersGroup[cardGroupIndex];
+                let poker = this._closeAreaPokers.pop();
+                if (poker) {
+                    (poker.status = i === 0 ? EpokerStatus.OPEN : EpokerStatus.CLOSE)
+                    cardGroup.AddPoker(poker)
+                    ll.EventManager.getInstance().emit(GAMEVENT.INIT_GROUP_CARD, cardGroupIndex, GameDB.CONST_PLAY_GROUPS - cards, poker)
+
+                }
+
+            }
+        }
     }
 
     /********************************************
@@ -69,6 +99,9 @@ export default class GameDB {
         }
         // 派发初始牌局事件
         ll.EventManager.getInstance().emit(GAMEVENT.INIT_POKER, this._pokers)
+
+
+
     }
 
     /********************************************

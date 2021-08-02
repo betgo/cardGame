@@ -1679,11 +1679,9 @@
         "__id__": 49
       }
     ],
-    "playGroupAchor": [
-      {
-        "__id__": 61
-      }
-    ],
+    "playGroupAchor": {
+      "__id__": 61
+    },
     "_id": ""
   },
   {

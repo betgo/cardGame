@@ -1,4 +1,5 @@
 export const GAMEVENT = {
     INIT_POKER: 'INIT_POKER',
-    PLAY: 'PLAY'
+    PLAY: 'PLAY',
+    INIT_GROUP_CARD: 'INIT_GROUP_CARD'
 }

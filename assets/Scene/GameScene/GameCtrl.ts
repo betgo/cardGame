@@ -17,6 +17,7 @@ export default class GameCtrl {
         this.m_GameView = gameView;
         ll.EventManager.getInstance().on(GAMEVENT.INIT_POKER, this.m_GameView.OnEventInit, this.m_GameView)
         ll.EventManager.getInstance().on(GAMEVENT.PLAY, this.m_GameView.OnEventPlay, this.m_GameView)
+        ll.EventManager.getInstance().on(GAMEVENT.INIT_GROUP_CARD, this.m_GameView.OnEventInitGroupCard, this.m_GameView)
         this.m_GameDB = GameDB.Init();
     }
 
