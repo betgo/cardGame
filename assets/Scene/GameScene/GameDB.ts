@@ -67,10 +67,11 @@ export default class GameDB {
                 let cardGroup: PokerGroup = this._playAreaPokersGroup[cardGroupIndex];
                 let poker = this._closeAreaPokers.pop();
                 if (poker) {
+                    // console.log('WORD>>>', poker.view?.node.getWorldPosition());
+
                     (poker.status = i === 0 ? EpokerStatus.OPEN : EpokerStatus.CLOSE)
                     cardGroup.AddPoker(poker)
                     ll.EventManager.getInstance().emit(GAMEVENT.INIT_GROUP_CARD, cardGroupIndex, GameDB.CONST_PLAY_GROUPS - cards, poker)
-
                 }
 
             }

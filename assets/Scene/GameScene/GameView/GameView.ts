@@ -1,6 +1,7 @@
 
-import { _decorator, Component, Node, Prefab, instantiate, Vec3, tween, v2, v3 } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, Vec3, tween, v2, v3, UITransform, SystemEventType, Event } from 'cc';
 import { EpokerStatus } from '../../../Config/ConfigEnum';
+import UIUtil from '../../../Util/UIUtil';
 import { UIPoker } from '../../../View/UIPoker/UIPoker';
 import GameDB, { Poker } from '../GameDB';
 
@@ -16,22 +17,29 @@ export class GameView extends Component {
     @property(Node) closeSendArea: Node = null!;
     @property(Node) openSendArea: Node = null!;
     @property([Node]) receiveAreaList: Node[] = [];
-    @property(Node) playGroupAchor: Node = null!;
+    @property(Node) playGroupRoot: Node = null!;
 
     private playGroupList: Node[] = []
 
     /********************************************
      * LifeCycle
     ********************************************/
+    start() {
+        console.log('gameview,start')
+
+        // this.node.on(SystemEventType.TOUCH_START, (event: Event) => console.log(event), this)
+    }
     public onLoad() {
         for (let i = 0; i < GameDB.CONST_PLAY_GROUPS; i++) {
             let playGroup = new Node();
-            playGroup.setPosition(new Vec3(100 * i, 0, 0))
-            this.playGroupAchor.addChild(playGroup)
+            playGroup.setPosition(new Vec3(85 * i, 0, 0))
+            this.playGroupRoot.addChild(playGroup)
             this.playGroupList.push(playGroup)
         }
+
     }
-    InitPokers(pokers: Poker[]) {
+    /** 创建扑克实例，添加到初始区 */
+    public InitPokers(pokers: Poker[]) {
         // 创建扑克UI
         pokers.forEach((poker, index) => {
             let uiPoker = this.CreateUIPoker(poker)
@@ -50,28 +58,26 @@ export class GameView extends Component {
         this.OnPlay();
     }
     public OnEventInitGroupCard(groupIndex: number, cardIndex: number, poker: Poker) {
+        let index = GameDB.CONST_PLAY_GROUPS * cardIndex - cardIndex * (cardIndex - 1) / 2 - cardIndex + groupIndex;
         // 移动UI
         let node: Node = poker.view!.node
-        let wp = node.getWorldPosition(v3(0, 0, 0))
-        let group = this.playGroupList[groupIndex];
-        let gp = group.getPosition(wp)
-        node.removeFromParent();
-        node.setPosition(gp)
-        group.addChild(node)
+
+        UIUtil.move(node, this.playGroupRoot)
+        node.setSiblingIndex(index)
+        let delay = index * 0.05
+        let px = groupIndex * 85
         if (poker.status === EpokerStatus.OPEN) {
             tween(node)
-                .delay(0.0)
-                .to(0.5, { position: v3(0, -30 * cardIndex, 0) })
-                // .to(0.3, { scale: v3(0, 1, 0) })
+                .delay(delay)
+                .to(0.5, { position: v3(px, -30 * cardIndex, 0) })
                 .call(() => {
                     poker.view?.refresh();
                 })
-                // .to(0.3, { scale: v3(1, 1,  1) })
                 .start()
         } else {
             tween(node)
-                .delay(0.0)
-                .to(0.2, { position: v3(0, -30 * cardIndex, 0) })
+                .delay(delay)
+                .to(0.2, { position: v3(px, -30 * cardIndex, 0) })
                 .start()
         }
 
@@ -79,19 +85,39 @@ export class GameView extends Component {
     /********************************************
      * private  API
     ********************************************/
+
+    /** 实例方法 */
     private CreateUIPoker(poker: Poker): UIPoker {
         let uipokerNode = instantiate(this.pokerPrefab)
         let uipoker: UIPoker = uipokerNode.getComponent(UIPoker)!;
+        // prefab实例初始化
         uipoker.init(poker)
         return uipoker
     }
 
+    /** 将初始区的牌移到发牌区 */
     private OnPlay() {
-        for (let i = 0; i < this.initArea.children.length; i++) {
-            let child = this.initArea.children[i];
+
+        // addChild  会将实例对象移除，造成只能复制一半
+        // for (let i = 0; i < this.initArea.children.length; i++) {
+        //     let child = this.initArea.children[i];
+        //     this.closeSendArea.addChild(child)
+        // }
+        // while (this.initArea.children.length) {
+        //     this.closeSendArea.addChild(this.initArea.children[0])
+        // }
+
+        // this.initArea.removeAllChildren();
+        let statck: Node[] = []
+        for (let i = this.initArea.children.length - 1; i >= 0; i--) {
+            let child = this.initArea.children[i]
+            statck.push(child)
+            this.initArea.removeChild(child)
+        }
+        for (let i = statck.length - 1; i >= 0; i--) {
+            let child = statck[i]
             this.closeSendArea.addChild(child)
         }
-        this.initArea.removeAllChildren();
     }
 
 }

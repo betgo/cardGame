@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, Label, Sprite, SpriteFrame, Color, color } from 'cc';
+import { _decorator, Component, Node, Label, Sprite, SpriteFrame, Color, color, SystemEventType, Event, systemEvent } from 'cc';
 import { EpokerStatus, SuitEnum } from '../../Config/ConfigEnum';
 import { Poker } from '../../Scene/GameScene/GameDB';
 const { ccclass, property } = _decorator;
@@ -41,9 +41,46 @@ export class UIPoker extends Component {
     private blackTextColor = Color.BLACK;
 
     private _poker: Poker = null!;
+    /********************************************
+    * LifeCycle
+    ********************************************/
+    public start() {
+        console.log('uipoker>>>start');
+        // this.node.on(SystemEventType.MOUSE_DOWN, this.stopPropagation, this)
+        // console.log('start', this.node.hasEventListener(SystemEventType.MOUSE_DOWN));
+        // this.node.on(Node.EventType.MOUSE_WHEEL, () => { console.log(12312) }, this)
+        // 注册触摸事件
+        // this.node.on(SystemEventType.TOUCH_START, this.onTouchStart, this)
+        // this.node.on(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
+        // this.node.on(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
+        // this.node.on(SystemEventType.TOUCH_END, this.onTouchEnd, this)
+    }
+
+    onEnable() {
+        // console.log('Enable');
+        // this.node.on(SystemEventType.MOUSE_DOWN, () => { console.log('start') }, this)
+        // // console.log('Enable2');
+
+        // this.node.on(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
+        // this.node.on(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
+        // this.node.on(SystemEventType.TOUCH_END, this.onTouchEnd, this)
+    }
+
+    onDestroy() {
+        // this.node.off(SystemEventType.TOUCH_START, this.onTouchStart, this)
+        // this.node.off(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
+        // this.node.off(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
+        // this.node.off(SystemEventType.TOUCH_END, this.onTouchEnd, this)
+    }
+
     init(poker: Poker) {
         poker.Bind(this)
         this._poker = poker
+        // this.node.on(Node.EventType.MOUSE_WHEEL, () => { console.log(12312) }, this)
+        this.node.on(SystemEventType.MOUSE_DOWN, () => { console.log(12312) }, this)
+        this.node.on(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
+        this.node.on(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
+        this.node.on(SystemEventType.TOUCH_END, this.onTouchEnd, this)
         if (poker.point < 11) {
             this.suit.spriteFrame = this.suitList[poker.suit]
         } else {
@@ -55,9 +92,6 @@ export class UIPoker extends Component {
         this.refresh()
     }
 
-    start() {
-
-    }
 
     refresh() {
         if (this._poker.status === EpokerStatus.CLOSE) {
@@ -67,5 +101,18 @@ export class UIPoker extends Component {
 
         }
     }
+    /********************************************
+     * Event Handler
+    ********************************************/
+    onTouchStart(_event: any) {
+        console.log("touch:start");
 
+    }
+    onTouchMove(_event: any) {
+        console.log("touch:move");
+
+    }
+    onTouchEnd(_event: any) {
+        console.log("touch:end");
+    }
 }
