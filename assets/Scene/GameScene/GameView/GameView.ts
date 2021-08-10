@@ -26,8 +26,6 @@ export class GameView extends Component {
     ********************************************/
     start() {
         console.log('gameview,start')
-
-        // this.node.on(SystemEventType.TOUCH_START, (event: Event) => console.log(event), this)
     }
     public onLoad() {
         for (let i = 0; i < GameDB.CONST_PLAY_GROUPS; i++) {
@@ -51,9 +49,6 @@ export class GameView extends Component {
     /********************************************
      * Public  API
     ********************************************/
-    public OnEventInit(pokers: Poker[]) {
-        this.InitPokers(pokers)
-    }
     public OnEventPlay() {
         this.OnPlay();
     }
@@ -70,9 +65,11 @@ export class GameView extends Component {
             tween(node)
                 .delay(delay)
                 .to(0.5, { position: v3(px, -30 * cardIndex, 0) })
+                .to(0.3, { scale: new Vec3(0, 1, 1) })
                 .call(() => {
                     poker.view?.refresh();
                 })
+                .to(0.3, { scale: new Vec3(1, 1, 1) })
                 .start()
         } else {
             tween(node)
@@ -98,16 +95,6 @@ export class GameView extends Component {
     /** 将初始区的牌移到发牌区 */
     private OnPlay() {
 
-        // addChild  会将实例对象移除，造成只能复制一半
-        // for (let i = 0; i < this.initArea.children.length; i++) {
-        //     let child = this.initArea.children[i];
-        //     this.closeSendArea.addChild(child)
-        // }
-        // while (this.initArea.children.length) {
-        //     this.closeSendArea.addChild(this.initArea.children[0])
-        // }
-
-        // this.initArea.removeAllChildren();
         let statck: Node[] = []
         for (let i = this.initArea.children.length - 1; i >= 0; i--) {
             let child = this.initArea.children[i]

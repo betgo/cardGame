@@ -1,3 +1,4 @@
+import { EventTarget } from "cc";
 import { EpokerStatus, SuitEnum } from "../../Config/ConfigEnum";
 import { UIPoker } from "../../View/UIPoker/UIPoker";
 import { GAMEVENT } from "./GameEvent";
@@ -29,6 +30,9 @@ export class PokerGroup {
     public get pokers(): Poker[] {
         return this._pokers;
     }
+    public set pokers(v) {
+        this._pokers = v;
+    }
 
     public AddPoker(poker: Poker) {
         this._pokers.push(poker)
@@ -45,7 +49,7 @@ export default class GameDB {
     /********************************************
      * Public static API
      ********************************************/
-    public static Init(): GameDB {
+    public static Instance(): GameDB {
         let gameDB = new GameDB();
         return gameDB;
     }
@@ -56,10 +60,11 @@ export default class GameDB {
      * Public  API
      ********************************************/
     public Play() {
+        // 洗牌
+        this.shuffle(this._pokers);
         [this._closeAreaPokers, this._pokers] = [this._pokers, this.closeAreaPokers]
         // 通知UI层 ，发生变化
-        ll.EventManager.getInstance().emit(GAMEVENT.PLAY, this._pokers)
-
+        ll.EventManager.getInstance().emit(GAMEVENT.PLAY)
         // 发牌
         for (let cards = GameDB.CONST_PLAY_GROUPS; cards >= 1; cards--) {
             for (let i = 0; i < cards; i++) {
@@ -67,21 +72,16 @@ export default class GameDB {
                 let cardGroup: PokerGroup = this._playAreaPokersGroup[cardGroupIndex];
                 let poker = this._closeAreaPokers.pop();
                 if (poker) {
-                    // console.log('WORD>>>', poker.view?.node.getWorldPosition());
-
                     (poker.status = i === 0 ? EpokerStatus.OPEN : EpokerStatus.CLOSE)
                     cardGroup.AddPoker(poker)
                     ll.EventManager.getInstance().emit(GAMEVENT.INIT_GROUP_CARD, cardGroupIndex, GameDB.CONST_PLAY_GROUPS - cards, poker)
+                    // this.emit(GAMEVENT.INIT_GROUP_CARD, cardGroupIndex, GameDB.CONST_PLAY_GROUPS - cards, poker)
                 }
 
             }
         }
     }
-
-    /********************************************
-     * private  API
-    ********************************************/
-    constructor() {
+    public Init() {
         // 初始化牌局结构
         for (let i = 0; i < GameDB.CONST_RECEIVE_GROUPS; i++) {
             let pokerGroup = new PokerGroup();
@@ -98,10 +98,24 @@ export default class GameDB {
                 this.pokers.push(poker)
             }
         }
-        // 派发初始牌局事件
-        ll.EventManager.getInstance().emit(GAMEVENT.INIT_POKER, this._pokers)
+    }
 
+    /********************************************
+     * private  API
+    ********************************************/
+    constructor() {
 
+    }
+
+    // 洗牌
+    private shuffle(pokers: Poker[], count: number = 100) {
+        for (let i = 0; i < count; i++) {
+            let s = parseInt('' + Math.random() * pokers.length)
+            let e = parseInt('' + Math.random() * pokers.length)
+            let temp = pokers[s]
+            pokers[s] = pokers[e]
+            pokers[e] = temp
+        }
 
     }
 
@@ -109,10 +123,16 @@ export default class GameDB {
      * getter && setter
     ********************************************/
     public get pokers(): Poker[] { return this._pokers }
+    public set pokers(v) {
+        this._pokers = v
+    }
     public get closeAreaPokers(): Poker[] { return this._closeAreaPokers }
     public get openAreaPokers(): Poker[] { return this._openAreaPokers }
     public get receiveAreaPokersGroup(): PokerGroup[] { return this._receiveAreaPokersGroup }
     public get playAreaPokersGroup(): PokerGroup[] { return this._playAreaPokersGroup }
+    public set playAreaPokersGroup(v) {
+        this._playAreaPokersGroup = v
+    }
 
     /********************************************
      * property

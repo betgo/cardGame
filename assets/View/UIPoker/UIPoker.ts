@@ -45,42 +45,29 @@ export class UIPoker extends Component {
     * LifeCycle
     ********************************************/
     public start() {
-        console.log('uipoker>>>start');
-        // this.node.on(SystemEventType.MOUSE_DOWN, this.stopPropagation, this)
-        // console.log('start', this.node.hasEventListener(SystemEventType.MOUSE_DOWN));
-        // this.node.on(Node.EventType.MOUSE_WHEEL, () => { console.log(12312) }, this)
-        // 注册触摸事件
-        // this.node.on(SystemEventType.TOUCH_START, this.onTouchStart, this)
-        // this.node.on(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
-        // this.node.on(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
-        // this.node.on(SystemEventType.TOUCH_END, this.onTouchEnd, this)
+
     }
 
     onEnable() {
-        // console.log('Enable');
-        // this.node.on(SystemEventType.MOUSE_DOWN, () => { console.log('start') }, this)
-        // // console.log('Enable2');
-
-        // this.node.on(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
-        // this.node.on(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
-        // this.node.on(SystemEventType.TOUCH_END, this.onTouchEnd, this)
+        // 注册触摸事件
+        this.node.on(SystemEventType.TOUCH_START, this.onTouchStart, this)
+        this.node.on(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
+        this.node.on(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
+        this.node.on(SystemEventType.TOUCH_END, this.onTouchEnd, this)
     }
 
     onDestroy() {
-        // this.node.off(SystemEventType.TOUCH_START, this.onTouchStart, this)
-        // this.node.off(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
-        // this.node.off(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
-        // this.node.off(SystemEventType.TOUCH_END, this.onTouchEnd, this)
+        this.node.off(SystemEventType.TOUCH_START, this.onTouchStart, this)
+        this.node.off(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
+        this.node.off(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
+        this.node.off(SystemEventType.TOUCH_END, this.onTouchEnd, this)
     }
 
     init(poker: Poker) {
         poker.Bind(this)
         this._poker = poker
-        // this.node.on(Node.EventType.MOUSE_WHEEL, () => { console.log(12312) }, this)
-        this.node.on(SystemEventType.MOUSE_DOWN, () => { console.log(12312) }, this)
-        this.node.on(SystemEventType.TOUCH_MOVE, this.onTouchMove, this)
-        this.node.on(SystemEventType.TOUCH_CANCEL, this.onTouchEnd, this)
-        this.node.on(SystemEventType.TOUCH_END, this.onTouchEnd, this)
+
+
         if (poker.point < 11) {
             this.suit.spriteFrame = this.suitList[poker.suit]
         } else {
