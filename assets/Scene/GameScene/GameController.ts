@@ -8,7 +8,7 @@ import { GameView } from "./GameView/GameView";
 /**
  * 游戏牌局管理者
  */
-export default class GameController extends EventTarget {
+export default class GameController {
 
     private m_GameDB: GameDB = null!;
     private m_GameView: GameView = null!;
@@ -19,11 +19,7 @@ export default class GameController extends EventTarget {
         this.m_GameDB = GameDB.Instance();
         this.m_GameDB.Init()
         this.m_GameView.InitPokers(this.m_GameDB.pokers)
-        // vm.viewModel();
-        // EventTarget.on(GAMEVENT.PLAY, this.m_GameView.OnEventPlay, this.m_GameView)
-        // EventTarget.on(GAMEVENT.INIT_GROUP_CARD, this.m_GameView.OnEventInitGroupCard, this.m_GameView)
-        ll.EventManager.getInstance().on(GAMEVENT.PLAY, this.m_GameView.OnEventPlay, this.m_GameView)
-        ll.EventManager.getInstance().on(GAMEVENT.INIT_GROUP_CARD, this.m_GameView.OnEventInitGroupCard, this.m_GameView)
+        this.m_GameView.BindModel(this.m_GameDB)
     }
 
 
@@ -32,7 +28,7 @@ export default class GameController extends EventTarget {
     }
 
     public Exit() {
-
+        this.m_GameView.UnBindMOdel()
     }
 
 }

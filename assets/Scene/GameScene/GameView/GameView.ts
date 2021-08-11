@@ -1,15 +1,18 @@
 
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, tween, v2, v3, UITransform, SystemEventType, Event } from 'cc';
 import { EpokerStatus } from '../../../Config/ConfigEnum';
+import { Model } from '../../../Framework/MVC/Model';
+import View from '../../../Framework/MVC/View';
 import UIUtil from '../../../Util/UIUtil';
 import { UIPoker } from '../../../View/UIPoker/UIPoker';
 import GameDB, { Poker } from '../GameDB';
+import { GAMEVENT } from '../GameEvent';
 
 
 const { ccclass, property } = _decorator;
 
 @ccclass('GameView')
-export class GameView extends Component {
+export class GameView extends View {
 
     @property(Prefab) pokerPrefab: Prefab = null!;
 
@@ -20,12 +23,25 @@ export class GameView extends Component {
     @property(Node) playGroupRoot: Node = null!;
 
     private playGroupList: Node[] = []
-
+    private _model: GameDB = null!;
     /********************************************
      * LifeCycle
     ********************************************/
+    constructor() {
+        super();
+        this.on(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventPokerMoveFromPlayAreaToReceiveArea, this)
+    }
     start() {
         console.log('gameview,start')
+    }
+    public BindModel(DB: GameDB) {
+        this._model = DB
+        this._model.on(GAMEVENT.PLAY, this.OnEventPlay, this)
+        this._model.on(GAMEVENT.INIT_GROUP_CARD, this.OnEventInitGroupCard, this)
+    }
+    public UnBindMOdel() {
+        this._model.off(GAMEVENT.PLAY, this.OnEventPlay)
+        this._model.off(GAMEVENT.INIT_GROUP_CARD, this.OnEventInitGroupCard)
     }
     public onLoad() {
         for (let i = 0; i < GameDB.CONST_PLAY_GROUPS; i++) {
@@ -45,7 +61,24 @@ export class GameView extends Component {
             this.initArea?.addChild(uiPoker.node);
         })
     }
-
+    /********************************************
+    * Interface for UIPoker 
+    ********************************************/
+    public OnClickUIPoker(uiPoker: UIPoker) {
+        if (this.isLocationPlayArea(uiPoker)) {
+            console.log(1111);
+            if (uiPoker.isOpen()) {
+                console.log(222);
+                if (this.isIndexPlayAreaGroupTop(uiPoker)) {
+                    console.log(333);
+                    if (uiPoker.isPoint(1)) {
+                        console.log(4444);
+                        this.emit(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, uiPoker.poker)
+                    }
+                }
+            }
+        }
+    }
     /********************************************
      * Public  API
     ********************************************/
@@ -80,6 +113,13 @@ export class GameView extends Component {
 
     }
     /********************************************
+      * Event Handler
+     ********************************************/
+    public OnEventPokerMoveFromPlayAreaToReceiveArea(poker: Poker) {
+        console.log(`OnEventPokerMoveFromPlayAreaToReceiveArea===>${poker}`);
+
+    }
+    /********************************************
      * private  API
     ********************************************/
 
@@ -88,7 +128,7 @@ export class GameView extends Component {
         let uipokerNode = instantiate(this.pokerPrefab)
         let uipoker: UIPoker = uipokerNode.getComponent(UIPoker)!;
         // prefab实例初始化
-        uipoker.init(poker)
+        uipoker.init(poker, this)
         return uipoker
     }
 
@@ -105,6 +145,13 @@ export class GameView extends Component {
             let child = statck[i]
             this.closeSendArea.addChild(child)
         }
+    }
+
+    private isLocationPlayArea(uiPoker: UIPoker): boolean {
+        return this._model.isLocationPlayArea(uiPoker.poker)
+    }
+    private isIndexPlayAreaGroupTop(uiPoker: UIPoker): boolean {
+        return this._model.isIndexPlayAreaGroupTop(uiPoker.poker)
     }
 
 }

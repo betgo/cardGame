@@ -1,7 +1,9 @@
 
 import { _decorator, Component, Node, Label, Sprite, SpriteFrame, Color, color, SystemEventType, Event, systemEvent } from 'cc';
 import { EpokerStatus, SuitEnum } from '../../Config/ConfigEnum';
+import View from '../../Framework/MVC/View';
 import { Poker } from '../../Scene/GameScene/GameDB';
+import { GameView } from '../../Scene/GameScene/GameView/GameView';
 const { ccclass, property } = _decorator;
 
 const PONIT_MAP = {
@@ -21,7 +23,7 @@ const PONIT_MAP = {
 }
 
 @ccclass('UIpoker')
-export class UIPoker extends Component {
+export class UIPoker extends View {
 
     @property(Label)
     number: Label = null!;
@@ -40,7 +42,9 @@ export class UIPoker extends Component {
     private redTextColor = color(183, 23, 40);
     private blackTextColor = Color.BLACK;
 
+    public get poker() { return this._poker }
     private _poker: Poker = null!;
+    private _view: GameView = null!;
     /********************************************
     * LifeCycle
     ********************************************/
@@ -63,10 +67,10 @@ export class UIPoker extends Component {
         this.node.off(SystemEventType.TOUCH_END, this.onTouchEnd, this)
     }
 
-    init(poker: Poker) {
+    init(poker: Poker, view: GameView) {
         poker.Bind(this)
         this._poker = poker
-
+        this._view = view
 
         if (poker.point < 11) {
             this.suit.spriteFrame = this.suitList[poker.suit]
@@ -88,6 +92,14 @@ export class UIPoker extends Component {
 
         }
     }
+
+    public isOpen() {
+        return this._poker.status === EpokerStatus.OPEN
+    }
+
+    public isPoint(num: number) {
+        return this._poker.point === num
+    }
     /********************************************
      * Event Handler
     ********************************************/
@@ -101,5 +113,6 @@ export class UIPoker extends Component {
     }
     onTouchEnd(_event: any) {
         console.log("touch:end");
+        this._view.OnClickUIPoker(this)
     }
 }

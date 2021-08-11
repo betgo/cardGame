@@ -1,5 +1,6 @@
 import { EventTarget } from "cc";
 import { EpokerStatus, SuitEnum } from "../../Config/ConfigEnum";
+import { Model } from "../../Framework/MVC/Model";
 import { UIPoker } from "../../View/UIPoker/UIPoker";
 import { GAMEVENT } from "./GameEvent";
 
@@ -44,7 +45,7 @@ export class PokerGroup {
 /**
  * 游戏牌局数据库
  */
-export default class GameDB {
+export default class GameDB extends Model {
 
     /********************************************
      * Public static API
@@ -64,7 +65,7 @@ export default class GameDB {
         this.shuffle(this._pokers);
         [this._closeAreaPokers, this._pokers] = [this._pokers, this.closeAreaPokers]
         // 通知UI层 ，发生变化
-        ll.EventManager.getInstance().emit(GAMEVENT.PLAY)
+        this.emit(GAMEVENT.PLAY)
         // 发牌
         for (let cards = GameDB.CONST_PLAY_GROUPS; cards >= 1; cards--) {
             for (let i = 0; i < cards; i++) {
@@ -74,8 +75,7 @@ export default class GameDB {
                 if (poker) {
                     (poker.status = i === 0 ? EpokerStatus.OPEN : EpokerStatus.CLOSE)
                     cardGroup.AddPoker(poker)
-                    ll.EventManager.getInstance().emit(GAMEVENT.INIT_GROUP_CARD, cardGroupIndex, GameDB.CONST_PLAY_GROUPS - cards, poker)
-                    // this.emit(GAMEVENT.INIT_GROUP_CARD, cardGroupIndex, GameDB.CONST_PLAY_GROUPS - cards, poker)
+                    this.emit(GAMEVENT.INIT_GROUP_CARD, cardGroupIndex, GameDB.CONST_PLAY_GROUPS - cards, poker)
                 }
 
             }
@@ -99,13 +99,30 @@ export default class GameDB {
             }
         }
     }
+    // 是否在play区域
+    public isLocationPlayArea(poker: Poker): boolean {
+        return this.playAreaPokersGroup.filter(
+            pg => pg.pokers.filter(p => p.point === poker.point && p.suit === poker.suit).length > 0
+        ).length > 0
+    }
+    // 是否在牌顶
+    public isIndexPlayAreaGroupTop(poker: Poker): boolean {
+        for (let pg of this.playAreaPokersGroup) {
+            let pokers = pg.pokers
+            if (pokers.length > 0) {
+                let p = pokers[pokers.length - 1]
+                if (p.point === poker.point && p.suit === poker.suit) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 
     /********************************************
      * private  API
     ********************************************/
-    constructor() {
 
-    }
 
     // 洗牌
     private shuffle(pokers: Poker[], count: number = 100) {
