@@ -1,8 +1,9 @@
 
-import { _decorator, Component, Node, Prefab, instantiate, Vec3, tween, v2, v3, UITransform, SystemEventType, Event } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, Vec3, tween, v2, v3 } from 'cc';
 import { EpokerStatus } from '../../../Config/ConfigEnum';
 import { Model } from '../../../Framework/MVC/Model';
 import View from '../../../Framework/MVC/View';
+import { Pool } from '../../../Pool/Pool';
 import UIUtil from '../../../Util/UIUtil';
 import { UIPoker } from '../../../View/UIPoker/UIPoker';
 import GameDB, { Poker } from '../GameDB';
@@ -32,7 +33,7 @@ export class GameView extends View {
         this.on(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventPokerMoveFromPlayAreaToReceiveArea, this)
     }
     start() {
-        console.log('gameview,start')
+        // console.log('gameview,start')
     }
     public BindModel(DB: GameDB) {
         this._model = DB
@@ -52,14 +53,30 @@ export class GameView extends View {
         }
 
     }
+
+    public Exit() {
+        this.UnBindMOdel()
+        this.off(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA)
+        this._model.pokers.forEach(p => {
+            Pool.getIntance().uipoker.put(p.view!.node);
+        })
+        // Pool.getIntance().uipoker.put()
+    }
     /** 创建扑克实例，添加到初始区 */
     public InitPokers(pokers: Poker[]) {
         // 创建扑克UI
         pokers.forEach((poker, index) => {
             let uiPoker = this.CreateUIPoker(poker)
-            uiPoker.node.setPosition(0.2 * index, 0.2 * index)
+            uiPoker.node.setPosition(v3(0, 0))
+            // uiPoker.node.setPosition(0.2 * index, 0.2 * index)
             this.initArea?.addChild(uiPoker.node);
         })
+    }
+    /********************************************
+    * Interface for UIPoker 
+    ********************************************/
+    onNewGameClick() {
+        ll.EventManager.getInstance().emit(GAMEVENT.ON_CLICK_NEW_GAME)
     }
     /********************************************
     * Interface for UIPoker 
@@ -91,26 +108,23 @@ export class GameView extends View {
         let node: Node = poker.view!.node
 
         UIUtil.move(node, this.playGroupRoot)
-        node.setSiblingIndex(index)
+        node.setSiblingIndex(-1)
         let delay = index * 0.05
         let px = groupIndex * 85
+        let tw = tween(node)
+            .delay(delay)
+            .call(() => {
+                node.setSiblingIndex(index)
+            })
+            .to(0.5, { position: v3(px, -30 * cardIndex, 0) })
         if (poker.status === EpokerStatus.OPEN) {
-            tween(node)
-                .delay(delay)
-                .to(0.5, { position: v3(px, -30 * cardIndex, 0) })
-                .to(0.3, { scale: new Vec3(0, 1, 1) })
+            tw = tw.to(0.3, { scale: new Vec3(0, 1, 1) })
                 .call(() => {
                     poker.view?.refresh();
                 })
                 .to(0.3, { scale: new Vec3(1, 1, 1) })
-                .start()
-        } else {
-            tween(node)
-                .delay(delay)
-                .to(0.2, { position: v3(px, -30 * cardIndex, 0) })
-                .start()
         }
-
+        tw.start();
     }
     /********************************************
       * Event Handler
@@ -125,8 +139,14 @@ export class GameView extends View {
 
     /** 实例方法 */
     private CreateUIPoker(poker: Poker): UIPoker {
-        let uipokerNode = instantiate(this.pokerPrefab)
-        let uipoker: UIPoker = uipokerNode.getComponent(UIPoker)!;
+        let uiPokerNode = Pool.getIntance().uipoker.get()
+        if (uiPokerNode == null) {
+            console.log('createUIpoker');
+
+            uiPokerNode = instantiate(this.pokerPrefab)
+        }
+
+        let uipoker: UIPoker = uiPokerNode!.getComponent(UIPoker)!;
         // prefab实例初始化
         uipoker.init(poker, this)
         return uipoker
@@ -145,6 +165,11 @@ export class GameView extends View {
             let child = statck[i]
             this.closeSendArea.addChild(child)
         }
+
+        // 对各个节点排序
+        this._model.closeAreaPokers.forEach((p, index) => {
+            p.view?.node.setSiblingIndex(index)
+        })
     }
 
     private isLocationPlayArea(uiPoker: UIPoker): boolean {

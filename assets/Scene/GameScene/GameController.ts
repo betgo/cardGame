@@ -28,7 +28,8 @@ export default class GameController {
     }
 
     public Exit() {
-        this.m_GameView.UnBindMOdel()
+        this.m_GameDB.Exit();
+        this.m_GameView.Exit();
     }
 
 }

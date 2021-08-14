@@ -58,12 +58,20 @@ export default class GameDB extends Model {
     public static readonly CONST_RECEIVE_GROUPS: number = 4;
     public static readonly CONST_PLAY_GROUPS: number = 7;
     /********************************************
+     * life  API
+     ********************************************/
+    Exit() {
+
+    }
+    /********************************************
      * Public  API
      ********************************************/
     public Play() {
+
+        this._closeAreaPokers = this._pokers.map(p => p)
         // 洗牌
-        this.shuffle(this._pokers);
-        [this._closeAreaPokers, this._pokers] = [this._pokers, this.closeAreaPokers]
+        this.shuffle(this._closeAreaPokers);
+        // [this._closeAreaPokers, this._pokers] = [this._pokers, this.closeAreaPokers]
         // 通知UI层 ，发生变化
         this.emit(GAMEVENT.PLAY)
         // 发牌
