@@ -11,6 +11,7 @@ export class Poker {
     private _view: UIPoker | null = null;
 
     public get view() { return this._view }
+    public parent: any = null
     constructor(point: number, suit: SuitEnum, status: EpokerStatus) {
         this.point = point
         this.suit = suit
@@ -23,6 +24,12 @@ export class Poker {
     public UnBind() {
         this._view = null;
     }
+    public isConcatable(p: Poker): boolean {
+        return this.point === p.point + 1 && this.isSimilarSuit(p.suit)
+    }
+    public isSimilarSuit(suit: SuitEnum) {
+        return (suit + this.suit) % 2 === 0
+    }
 }
 
 export class PokerGroup {
@@ -34,12 +41,32 @@ export class PokerGroup {
     public set pokers(v) {
         this._pokers = v;
     }
+    public index = -1;
 
+
+    public isPokerEmpty(): boolean { return this._pokers.length === 0 }
+    public RemovePoker(poker: Poker) { this._pokers.pop(); poker.parent = null; return poker }
+    public TopPoker(): Poker { return this._pokers[this._pokers.length - 1]; }
     public AddPoker(poker: Poker) {
         this._pokers.push(poker)
+        poker.parent = this
+        return poker
     }
 }
 
+class ReceivePokerGroup extends PokerGroup {
+    public isNextPoker(poker: Poker): boolean {
+        if (this.suit === poker.suit) {
+            if (this.TopPoker()) {
+                return this.TopPoker().point + 1 === poker.point
+            } else {
+                return poker.point === 1
+            }
+        }
+        return false
+    }
+    suit: SuitEnum | null = null
+}
 
 
 /**
@@ -78,7 +105,7 @@ export default class GameDB extends Model {
         for (let cards = GameDB.CONST_PLAY_GROUPS; cards >= 1; cards--) {
             for (let i = 0; i < cards; i++) {
                 let cardGroupIndex = GameDB.CONST_PLAY_GROUPS - cards + i;
-                let cardGroup: PokerGroup = this._playAreaPokersGroup[cardGroupIndex];
+                let cardGroup: ReceivePokerGroup = this._playAreaPokersGroup[cardGroupIndex];
                 let poker = this._closeAreaPokers.pop();
                 if (poker) {
                     (poker.status = i === 0 ? EpokerStatus.OPEN : EpokerStatus.CLOSE)
@@ -92,11 +119,15 @@ export default class GameDB extends Model {
     public Init() {
         // 初始化牌局结构
         for (let i = 0; i < GameDB.CONST_RECEIVE_GROUPS; i++) {
-            let pokerGroup = new PokerGroup();
+            let pokerGroup = new ReceivePokerGroup();
+            pokerGroup.index = i;
+            pokerGroup.suit = i
             this._receiveAreaPokersGroup.push(pokerGroup);
         }
         for (let i = 0; i < GameDB.CONST_PLAY_GROUPS; i++) {
-            let pokerGroup = new PokerGroup();
+            let pokerGroup = new ReceivePokerGroup();
+            pokerGroup.index = i;
+            pokerGroup.suit = i
             this._playAreaPokersGroup.push(pokerGroup);
         }
         // 初始化牌局
@@ -126,7 +157,28 @@ export default class GameDB extends Model {
         }
         return false
     }
-
+    /********************************************
+    * Event  Handler
+    ********************************************/
+    public OnPlayAreaPokerClick(poker: Poker) {
+        console.log(`OnEventPokerMoveFromPlayAreaToReceiveArea===>${poker}`);
+        if (poker.status === EpokerStatus.OPEN) {
+            if (this.isIndexPlayAreaGroupTop(poker)) {
+                // 询问手牌区是否可以承接此牌
+                for (let i = 0; i < GameDB.CONST_RECEIVE_GROUPS; i++) {
+                    let rpg: ReceivePokerGroup = this._receiveAreaPokersGroup[i]
+                    if (rpg.isNextPoker(poker)) {
+                        // 链接数据库
+                        let parent: ReceivePokerGroup = poker.parent
+                        parent.RemovePoker(poker)
+                        rpg.AddPoker(poker)
+                        this.emit(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, poker)
+                        return
+                    }
+                }
+            }
+        }
+    }
     /********************************************
      * private  API
     ********************************************/
@@ -153,8 +205,8 @@ export default class GameDB extends Model {
     }
     public get closeAreaPokers(): Poker[] { return this._closeAreaPokers }
     public get openAreaPokers(): Poker[] { return this._openAreaPokers }
-    public get receiveAreaPokersGroup(): PokerGroup[] { return this._receiveAreaPokersGroup }
-    public get playAreaPokersGroup(): PokerGroup[] { return this._playAreaPokersGroup }
+    public get receiveAreaPokersGroup(): ReceivePokerGroup[] { return this._receiveAreaPokersGroup }
+    public get playAreaPokersGroup(): ReceivePokerGroup[] { return this._playAreaPokersGroup }
     public set playAreaPokersGroup(v) {
         this._playAreaPokersGroup = v
     }
@@ -169,7 +221,7 @@ export default class GameDB extends Model {
     // 发牌区掀着的牌
     private _openAreaPokers: Poker[] = [];
     // 手牌区
-    private _receiveAreaPokersGroup: PokerGroup[] = [];
+    private _receiveAreaPokersGroup: ReceivePokerGroup[] = [];
     // 玩牌区
-    private _playAreaPokersGroup: PokerGroup[] = [];
+    private _playAreaPokersGroup: ReceivePokerGroup[] = [];
 }

@@ -6,7 +6,7 @@ import View from '../../../Framework/MVC/View';
 import { Pool } from '../../../Pool/Pool';
 import UIUtil from '../../../Util/UIUtil';
 import { UIPoker } from '../../../View/UIPoker/UIPoker';
-import GameDB, { Poker } from '../GameDB';
+import GameDB, { Poker, PokerGroup } from '../GameDB';
 import { GAMEVENT } from '../GameEvent';
 
 
@@ -30,7 +30,7 @@ export class GameView extends View {
     ********************************************/
     constructor() {
         super();
-        this.on(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventPokerMoveFromPlayAreaToReceiveArea, this)
+        this.on(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventMovePokerFromPlayToReceive, this)
     }
     start() {
         // console.log('gameview,start')
@@ -39,10 +39,13 @@ export class GameView extends View {
         this._model = DB
         this._model.on(GAMEVENT.PLAY, this.OnEventPlay, this)
         this._model.on(GAMEVENT.INIT_GROUP_CARD, this.OnEventInitGroupCard, this)
+        this._model.on(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventMovePokerFromPlayToReceive, this)
+
     }
     public UnBindMOdel() {
         this._model.off(GAMEVENT.PLAY, this.OnEventPlay)
         this._model.off(GAMEVENT.INIT_GROUP_CARD, this.OnEventInitGroupCard)
+        this._model.off(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventMovePokerFromPlayToReceive)
     }
     public onLoad() {
         for (let i = 0; i < GameDB.CONST_PLAY_GROUPS; i++) {
@@ -87,11 +90,9 @@ export class GameView extends View {
             if (uiPoker.isOpen()) {
                 console.log(222);
                 if (this.isIndexPlayAreaGroupTop(uiPoker)) {
-                    console.log(333);
-                    if (uiPoker.isPoint(1)) {
-                        console.log(4444);
-                        this.emit(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, uiPoker.poker)
-                    }
+                    this._model.OnPlayAreaPokerClick(uiPoker.poker)
+                    // this.emit(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, uiPoker.poker)
+
                 }
             }
         }
@@ -129,9 +130,14 @@ export class GameView extends View {
     /********************************************
       * Event Handler
      ********************************************/
-    public OnEventPokerMoveFromPlayAreaToReceiveArea(poker: Poker) {
-        console.log(`OnEventPokerMoveFromPlayAreaToReceiveArea===>${poker}`);
-
+    public OnEventMovePokerFromPlayToReceive(poker: Poker) {
+        let receiveIndex = poker.parent.index
+        let node = poker.view!.node
+        let receive: Node = this.receiveAreaList[receiveIndex]
+        UIUtil.move(node, receive);
+        tween(node)
+            .to(0.5, { position: v3(0, 0, 0) })
+            .start()
     }
     /********************************************
      * private  API
