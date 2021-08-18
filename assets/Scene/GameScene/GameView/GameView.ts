@@ -31,6 +31,7 @@ export class GameView extends View {
     constructor() {
         super();
         this.on(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventMovePokerFromPlayToReceive, this)
+        ll.EventManager.getInstance().on(GAMEVENT.CS_FLIP_POKER, this.OnEvntFlipPoker, this)
     }
     start() {
         // console.log('gameview,start')
@@ -71,7 +72,6 @@ export class GameView extends View {
         pokers.forEach((poker, index) => {
             let uiPoker = this.CreateUIPoker(poker)
             uiPoker.node.setPosition(v3(0, 0))
-            // uiPoker.node.setPosition(0.2 * index, 0.2 * index)
             this.initArea?.addChild(uiPoker.node);
         })
     }
@@ -86,12 +86,9 @@ export class GameView extends View {
     ********************************************/
     public OnClickUIPoker(uiPoker: UIPoker) {
         if (this.isLocationPlayArea(uiPoker)) {
-            console.log(1111);
             if (uiPoker.isOpen()) {
-                console.log(222);
                 if (this.isIndexPlayAreaGroupTop(uiPoker)) {
                     this._model.OnPlayAreaPokerClick(uiPoker.poker)
-                    // this.emit(GAMEVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, uiPoker.poker)
 
                 }
             }
@@ -135,10 +132,22 @@ export class GameView extends View {
         let node = poker.view!.node
         let receive: Node = this.receiveAreaList[receiveIndex]
         UIUtil.move(node, receive);
+        node.setSiblingIndex(poker.point)
         tween(node)
             .to(0.5, { position: v3(0, 0, 0) })
             .start()
     }
+    public OnEvntFlipPoker(poker: Poker) {
+
+        tween(poker.view?.node)
+            .to(0.3, { scale: new Vec3(0, 1, 1) })
+            .call(() => {
+                poker.view?.refresh();
+            })
+            .to(0.3, { scale: new Vec3(1, 1, 1) })
+            .start();
+    }
+
     /********************************************
      * private  API
     ********************************************/
@@ -147,7 +156,6 @@ export class GameView extends View {
     private CreateUIPoker(poker: Poker): UIPoker {
         let uiPokerNode = Pool.getIntance().uipoker.get()
         if (uiPokerNode == null) {
-            console.log('createUIpoker');
 
             uiPokerNode = instantiate(this.pokerPrefab)
         }
