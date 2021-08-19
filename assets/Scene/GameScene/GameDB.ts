@@ -34,24 +34,40 @@ export class Poker {
 
 export class PokerGroup {
 
-    private _pokers: Poker[] = [];
-    public get pokers(): Poker[] {
-        return this._pokers;
-    }
-    public set pokers(v) {
-        this._pokers = v;
-    }
+    public pokers: Poker[] = [];
     public index = -1;
+    public get top(): Poker { return this.pokers[this.pokers.length - 1]; }
 
 
-    public isPokerEmpty(): boolean { return this._pokers.length === 0 }
-    public RemovePoker(poker: Poker) { this._pokers.pop(); poker.parent = null; return poker }
-    public get top(): Poker { return this._pokers[this._pokers.length - 1]; }
+    public isPokerEmpty(): boolean { return this.pokers.length === 0 }
+    public RemovePoker(poker: Poker) { this.pokers.pop(); poker.parent = null; return poker }
     public AddPoker(poker: Poker) {
-        this._pokers.push(poker)
+        this.pokers.push(poker)
         poker.parent = this
         return poker
     }
+    public PopPoker() {
+        if (this.top) {
+            return this.RemovePoker(this.top)
+        } else {
+            return null
+        }
+    }
+    /**
+     * 洗牌
+     * @param count 次数
+     */
+    public shuffle(count: number = 100) {
+        for (let i = 0; i < count; i++) {
+            let s = parseInt('' + Math.random() * this.pokers.length)
+            let e = parseInt('' + Math.random() * this.pokers.length)
+            let temp = this.pokers[s]
+            this.pokers[s] = this.pokers[e]
+            this.pokers[e] = temp
+        }
+
+    }
+
 }
 
 class ReceivePokerGroup extends PokerGroup {
@@ -79,7 +95,11 @@ class PlayPokerGroup extends PokerGroup {
         return poker
     }
 }
+class ClosePokerGroup extends PokerGroup {
+}
+class OpenAreaGroup extends PokerGroup {
 
+}
 
 /**
  * 游戏牌局数据库
@@ -107,9 +127,12 @@ export default class GameDB extends Model {
      ********************************************/
     public Play() {
 
-        this._closeAreaPokers = this._pokers.map(p => p)
+        // this.closeAreaGroup.pokers = this._pokers.map(p => p)
+        this._pokers.map((p) => {
+            this.closeAreaGroup.AddPoker(p)
+        })
         // 洗牌
-        this.shuffle(this._closeAreaPokers);
+        this.closeAreaGroup.shuffle()
         // [this._closeAreaPokers, this._pokers] = [this._pokers, this.closeAreaPokers]
         // 通知UI层 ，发生变化
         this.emit(GAMEVENT.PLAY)
@@ -118,7 +141,7 @@ export default class GameDB extends Model {
             for (let i = 0; i < cards; i++) {
                 let cardGroupIndex = GameDB.CONST_PLAY_GROUPS - cards + i;
                 let cardGroup: PlayPokerGroup = this._playAreaPokersGroup[cardGroupIndex];
-                let poker = this._closeAreaPokers.pop();
+                let poker = this.closeAreaGroup.PopPoker();
                 if (poker) {
                     (poker.status = i === 0 ? EpokerStatus.OPEN : EpokerStatus.CLOSE)
                     cardGroup.AddPoker(poker)
@@ -155,6 +178,10 @@ export default class GameDB extends Model {
             pg => pg.pokers.filter(p => p.point === poker.point && p.suit === poker.suit).length > 0
         ).length > 0
     }
+    // 是否在Close区域
+    public isLocationCloseArea(poker: Poker): boolean {
+        return this.closeAreaGroup.pokers.filter(p => p.point === poker.point && p.suit === poker.suit).length > 0;
+    }
     // 是否在牌顶
     public isIndexPlayAreaGroupTop(poker: Poker): boolean {
         for (let pg of this.playAreaPokersGroup) {
@@ -168,11 +195,22 @@ export default class GameDB extends Model {
         }
         return false
     }
+    // 是否在close牌顶
+    public isIndexCloseAreaGroupTop(poker: Poker): boolean {
+        let pokers = this.closeAreaGroup.pokers
+        if (pokers.length > 0) {
+            let p = pokers[pokers.length - 1]
+            if (p.point === poker.point && p.suit === poker.suit) {
+                return true
+            }
+        }
+        return false
+    }
     /********************************************
     * Event  Handler
     ********************************************/
     public OnPlayAreaPokerClick(poker: Poker) {
-        console.log(`OnEventPokerMoveFromPlayAreaToReceiveArea===>${poker}`);
+        console.log(`OnPlayAreaPokerClick===>${poker}`);
         if (poker.status === EpokerStatus.OPEN) {
             if (this.isIndexPlayAreaGroupTop(poker)) {
                 // 询问手牌区是否可以承接此牌
@@ -190,22 +228,19 @@ export default class GameDB extends Model {
             }
         }
     }
+    public OnPlayClosePokerClick(poker: Poker) {
+        console.log(`OnPlayClosePokerClick===>${poker}`);
+        if (this.isIndexCloseAreaGroupTop(poker)) {
+            let parent: ClosePokerGroup = poker.parent
+            parent.RemovePoker(poker)
+            this.openAreaGroup.AddPoker(poker);
+            this.emit(GAMEVENT.CS_POKER_MOVE_FROM_CLOSEAREA_TO_OPENAREA, poker)
+        }
+    }
     /********************************************
      * private  API
     ********************************************/
 
-
-    // 洗牌
-    private shuffle(pokers: Poker[], count: number = 100) {
-        for (let i = 0; i < count; i++) {
-            let s = parseInt('' + Math.random() * pokers.length)
-            let e = parseInt('' + Math.random() * pokers.length)
-            let temp = pokers[s]
-            pokers[s] = pokers[e]
-            pokers[e] = temp
-        }
-
-    }
 
     /********************************************
      * getter && setter
@@ -214,8 +249,8 @@ export default class GameDB extends Model {
     public set pokers(v) {
         this._pokers = v
     }
-    public get closeAreaPokers(): Poker[] { return this._closeAreaPokers }
-    public get openAreaPokers(): Poker[] { return this._openAreaPokers }
+    public get closeAreaPokers(): Poker[] { return this.closeAreaGroup.pokers }
+    public get openAreaPokers(): Poker[] { return this.openAreaGroup.pokers }
     public get receiveAreaPokersGroup(): ReceivePokerGroup[] { return this._receiveAreaPokersGroup }
     public get playAreaPokersGroup(): PlayPokerGroup[] { return this._playAreaPokersGroup }
     public set playAreaPokersGroup(v) {
@@ -228,9 +263,9 @@ export default class GameDB extends Model {
     // 初始扑克牌
     private _pokers: Poker[] = [];
     // 发牌区盖着的牌
-    private _closeAreaPokers: Poker[] = [];
+    private closeAreaGroup: ClosePokerGroup = new ClosePokerGroup();
     // 发牌区掀着的牌
-    private _openAreaPokers: Poker[] = [];
+    private openAreaGroup: OpenAreaGroup = new OpenAreaGroup();
     // 手牌区
     private _receiveAreaPokersGroup: ReceivePokerGroup[] = [];
     // 玩牌区
