@@ -151,9 +151,14 @@ export class GameView extends View {
     public OnEventMovePokerFromCloseToOpen(poker: Poker) {
         let node = poker.view!.node
         UIUtil.move(node, this.openSendArea);
-        node.setSiblingIndex(poker.point)
+        node.setSiblingIndex(poker.parent.pokers.indexOf(poker))
+        let DX = node.position.x
         tween(node)
-            .to(0.5, { position: v3(0, 0, 0) })
+            .to(0.2, { position: v3(DX / 2, 0, 0), scale: v3(0, 1, 1) })
+            .call(() => {
+                poker.view?.refresh();
+            })
+            .to(0.2, { position: v3(0, 0, 0), scale: v3(1, 1, 1) })
             .start()
     }
     // 扑克打开

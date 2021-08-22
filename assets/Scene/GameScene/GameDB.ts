@@ -98,7 +98,11 @@ class PlayPokerGroup extends PokerGroup {
 class ClosePokerGroup extends PokerGroup {
 }
 class OpenAreaGroup extends PokerGroup {
-
+    public AddPoker(poker: Poker) {
+        super.AddPoker(poker)
+        poker.status = EpokerStatus.OPEN
+        return poker
+    }
 }
 
 /**
