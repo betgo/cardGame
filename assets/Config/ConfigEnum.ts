@@ -9,3 +9,10 @@ export enum EpokerStatus {
     CLOSE = 0,
     OPEN = 1,
 }
+
+export enum ELocation{
+    CLOSE =0,
+    OPEN,
+    RECERIVE,
+    PLAY
+}

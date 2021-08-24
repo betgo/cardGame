@@ -104,15 +104,12 @@ export class UIPoker extends View {
      * Event Handler
     ********************************************/
     onTouchStart(_event: any) {
-        console.log("touch:start");
 
     }
     onTouchMove(_event: any) {
-        console.log("touch:move");
 
     }
     onTouchEnd(_event: any) {
-        console.log("touch:end");
         this._view.OnClickUIPoker(this)
     }
 }

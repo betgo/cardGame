@@ -2,7 +2,7 @@
 import { _decorator, Component, Label, Prefab, Node, instantiate, SystemEventType, Event, EventTarget } from 'cc';
 
 import GameController from './GameController';
-import { GAMEVENT } from './GameEvent';
+import { GAME_EVENT } from './GameEvent';
 import { GameView } from './GameView/GameView';
 const { ccclass, property } = _decorator;
 
@@ -21,7 +21,7 @@ export class GameScript extends Component {
         this._gameController = new GameController();
         this._gameController.Init(this._gameView)
         this._gameController.Play();
-        ll.EventManager.getInstance().on(GAMEVENT.ON_CLICK_NEW_GAME, this.newGame, this)
+        ll.EventManager.getInstance().on(GAME_EVENT.ON_CLICK_NEW_GAME, this.newGame, this)
     }
 
     newGame() {

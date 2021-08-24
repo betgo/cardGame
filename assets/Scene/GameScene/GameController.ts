@@ -1,6 +1,6 @@
 import { instantiate, Prefab, Node, EventTarget } from "cc";
 import GameDB from "./GameDB";
-import { GAMEVENT } from "./GameEvent";
+import { GAME_EVENT } from "./GameEvent";
 import { GameView } from "./GameView/GameView";
 
 
@@ -13,7 +13,6 @@ export default class GameController {
     private m_GameDB: GameDB = null!;
     private m_GameView: GameView = null!;
 
-    // TODO 修改订阅逻辑
     public Init(gameView: GameView) {
         this.m_GameView = gameView;
         this.m_GameDB = GameDB.Instance();
