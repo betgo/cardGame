@@ -15,7 +15,7 @@ export default class GameController {
 
     public Init(gameView: GameView) {
         this.m_GameView = gameView;
-        this.m_GameDB = GameDB.Instance();
+        this.m_GameDB =  new GameDB();
         this.m_GameDB.Init()
         this.m_GameView.InitPokers(this.m_GameDB.pokers)
         this.m_GameView.BindModel(this.m_GameDB)

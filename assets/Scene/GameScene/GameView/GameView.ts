@@ -1,6 +1,7 @@
 
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, tween, v2, v3 } from 'cc';
 import { EpokerStatus } from '../../../Config/ConfigEnum';
+import { Debounce } from '../../../Framework/Base/Debounce';
 import { Model } from '../../../Framework/MVC/Model';
 import View from '../../../Framework/MVC/View';
 import { Pool } from '../../../Pool/Pool';
@@ -8,7 +9,6 @@ import UIUtil from '../../../Util/UIUtil';
 import { UIPoker } from '../../../View/UIPoker/UIPoker';
 import GameDB, { Poker, PokerGroup } from '../GameDB';
 import { GAME_EVENT } from '../GameEvent';
-
 
 const { ccclass, property } = _decorator;
 
@@ -43,6 +43,7 @@ export class GameView extends View {
         this._model.on(GAME_EVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventMovePokerFromPlayToReceive, this)
         this._model.on(GAME_EVENT.CS_POKER_MOVE_FROM_CLOSEAREA_TO_OPENAREA, this.OnEventMovePokerFromCloseToOpen, this)
         this._model.on(GAME_EVENT.CS_POKER_MOVE_FROM_OPENAREA_TO_RECEIVEAREA, this.OnEventMovePokerFromOpenToReceive, this)
+        this._model.on(GAME_EVENT.CS_ALL_POKERS_MOVE_FROM_OPENAREA_TO_CLOSEAREA, this.OnEventMoveAllPokersFromOpenToClose, this)
 
     }
     public UnBindMOdel() {
@@ -79,10 +80,17 @@ export class GameView extends View {
         })
     }
     /********************************************
-    * Interface for UIPoker 
+    * UI Event Handler
     ********************************************/
     onNewGameClick() {
         ll.EventManager.getInstance().emit(GAME_EVENT.ON_CLICK_NEW_GAME)
+    }
+
+    // close 底部点击事件
+    @Debounce(500)
+    onClickCloseBottom() {
+        console.log('closeBottom Click!');
+        this._model.onClickCloseBottom();
     }
     /********************************************
     * Interface for UIPoker 
@@ -145,7 +153,7 @@ export class GameView extends View {
     public OnEventMovePokerFromCloseToOpen(poker: Poker) {
         let node = poker.view!.node
         UIUtil.move(node, this.openSendArea);
-        node.setSiblingIndex(poker.parent.pokers.indexOf(poker))
+        node.setSiblingIndex(poker.indexInGroup())
         let DX = node.position.x
         tween(node)
             .to(0.2, { position: v3(DX / 2, 0, 0), scale: v3(0, 1, 1) })
@@ -168,6 +176,17 @@ export class GameView extends View {
     public OnEventMovePokerFromOpenToReceive(poker: Poker) {
         this._handlePokerMoveToReceive(poker)
     }
+
+    public OnEventMoveAllPokersFromOpenToClose(pokers: Poker[]) {
+        pokers.forEach(poker => {
+            let node = poker.view!.node
+            UIUtil.move(node, this.closeSendArea);
+            node.setSiblingIndex(poker.indexInGroup())
+            node.setPosition(v3(0, 0, 0))
+            poker.view?.refresh();
+        })
+    }
+
     // 扑克打开
     public OnEvntFlipPoker(poker: Poker) {
         tween(poker.view?.node)
@@ -220,8 +239,8 @@ export class GameView extends View {
         }
 
         // 对各个节点排序
-        this._model.closeAreaPokers.forEach((p, index) => {
-            p.view?.node.setSiblingIndex(index)
+        this._model.closeAreaPokers.forEach((p) => {
+            p.view?.node.setSiblingIndex(p.indexInGroup())
         })
     }
 
