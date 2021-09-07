@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, Prefab, instantiate, Vec3, tween, v2, v3 } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, Vec3, tween, v2, v3, UITransform } from 'cc';
 import { EpokerStatus } from '../../../Config/ConfigEnum';
 import { Debounce } from '../../../Framework/Base/Debounce';
 import { Model } from '../../../Framework/MVC/Model';
@@ -12,6 +12,7 @@ import { GAME_EVENT } from '../GameEvent';
 
 const { ccclass, property } = _decorator;
 
+const PADDING_PLAY = 85
 @ccclass('GameView')
 export class GameView extends View {
 
@@ -43,6 +44,8 @@ export class GameView extends View {
         this._model.on(GAME_EVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA, this.OnEventMovePokerFromPlayToReceive, this)
         this._model.on(GAME_EVENT.CS_POKER_MOVE_FROM_CLOSEAREA_TO_OPENAREA, this.OnEventMovePokerFromCloseToOpen, this)
         this._model.on(GAME_EVENT.CS_POKER_MOVE_FROM_OPENAREA_TO_RECEIVEAREA, this.OnEventMovePokerFromOpenToReceive, this)
+        this._model.on(GAME_EVENT.CS_POKER_MOVE_TO_PLAY, this.OnEventMovePokerFromOpenToPlay, this)
+        this._model.on(GAME_EVENT.CS_POKERS_MOVE_TO_PLAY, this.OnEventMovePokersToPlay, this)
         this._model.on(GAME_EVENT.CS_ALL_POKERS_MOVE_FROM_OPENAREA_TO_CLOSEAREA, this.OnEventMoveAllPokersFromOpenToClose, this)
 
     }
@@ -96,19 +99,23 @@ export class GameView extends View {
     * Interface for UIPoker 
     ********************************************/
     public OnClickUIPoker(uiPoker: UIPoker) {
+        console.log(uiPoker.poker.parent);
+
         if (this.isLocationPlayArea(uiPoker)) {
             if (uiPoker.isOpen()) {
-                if (this.isIndexPlayTop(uiPoker)) {
-                    this._model.OnPlayAreaPokerClick(uiPoker.poker)
-                }
+                this._model.OnPlayAreaPokerClick(uiPoker.poker)
             }
         } else if (this.isLocationClose(uiPoker)) {
             if (this.isIndexCloseTop(uiPoker)) {
-                this._model.OnPlayClosePokerClick(uiPoker.poker)
+                this._model.OnClosePokerClick(uiPoker.poker)
             }
         } else if (this.isLocationOpen(uiPoker)) {
             if (this.isLocationOpenTop(uiPoker)) {
-                this._model.OnPlayOpenPokerClick(uiPoker.poker)
+                this._model.OnOpenPokerClick(uiPoker.poker)
+            }
+        } else if (this.isLocationReceive(uiPoker)) {
+            if (this.isLocationReceiveTop(uiPoker)) {
+                this._model.OnReceivePokerClick(uiPoker.poker)
             }
         }
     }
@@ -140,7 +147,8 @@ export class GameView extends View {
                 })
                 .to(0.3, { scale: new Vec3(1, 1, 1) })
         }
-        tw.start();
+
+        tw.start()
     }
     /********************************************
       * Event Handler
@@ -176,6 +184,17 @@ export class GameView extends View {
     public OnEventMovePokerFromOpenToReceive(poker: Poker) {
         this._handlePokerMoveToReceive(poker)
     }
+    // 从open区移动到play区
+    public OnEventMovePokerFromOpenToPlay(poker: Poker) {
+        this._handlePokerMoveToPlay(poker)
+    }
+
+    public OnEventMovePokersToPlay(pokers: Poker[]) {
+        for (let i = pokers.length - 1; i >= 0; i--) {
+            let poker = pokers[i]
+            this._handlePokerMoveToPlay(poker)
+        }
+    }
 
     public OnEventMoveAllPokersFromOpenToClose(pokers: Poker[]) {
         pokers.forEach(poker => {
@@ -196,6 +215,8 @@ export class GameView extends View {
             })
             .to(0.3, { scale: new Vec3(1, 1, 1) })
             .start();
+
+
     }
 
     /********************************************
@@ -207,11 +228,24 @@ export class GameView extends View {
         let node = poker.view!.node
         let receive: Node = this.receiveAreaList[receiveIndex]
         UIUtil.move(node, receive);
-        node.setSiblingIndex(poker.point)
+        node.setSiblingIndex(poker.point);
         tween(node)
             .to(0.5, { position: v3(0, 0, 0) })
             .start()
     }
+    private _handlePokerMoveToPlay(poker: Poker) {
+        let PlayGroupIndex = poker.parent.index
+        let pokerIndex = poker.indexInGroup();
+        let node = poker.view!.node
+        // let receive: Node = this.playGroupRoot[receiveIndex]
+        UIUtil.move(node, this.playGroupRoot);
+        node.setSiblingIndex(poker.point === 0 ? 0 : (poker.parent.top.view.node.getSiblingIndex() + pokerIndex));
+        let dx = PlayGroupIndex * PADDING_PLAY;
+        tween(node)
+            .to(0.5, { position: v3(dx, -30 * pokerIndex, 0) })
+            .start()
+    }
+
 
     /** 实例方法 */
     private CreateUIPoker(poker: Poker): UIPoker {
@@ -253,6 +287,9 @@ export class GameView extends View {
     private isLocationOpen(uiPoker: UIPoker): boolean {
         return this._model.isLocationOpen(uiPoker.poker)
     }
+    private isLocationReceive(uiPoker: UIPoker): boolean {
+        return this._model.isLocationReceive(uiPoker.poker)
+    }
     private isIndexPlayTop(uiPoker: UIPoker): boolean {
         return this._model.isIndexPlayTop(uiPoker.poker)
     }
@@ -261,6 +298,9 @@ export class GameView extends View {
     }
     private isLocationOpenTop(uiPoker: UIPoker): boolean {
         return this._model.isIndexOpenTop(uiPoker.poker)
+    }
+    private isLocationReceiveTop(uiPoker: UIPoker): boolean {
+        return this._model.isIndexReceiveTop(uiPoker.poker)
     }
 }
 

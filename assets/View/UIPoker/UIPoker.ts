@@ -72,13 +72,13 @@ export class UIPoker extends View {
         this._poker = poker
         this._view = view
 
+        this.number.string = `${PONIT_MAP[poker.point + '']}`;
+        this.number.color = (poker.suit === SuitEnum.Clubs || poker.suit === SuitEnum.Spades) ? this.blackTextColor : this.redTextColor
         if (poker.point < 11) {
             this.suit.spriteFrame = this.suitList[poker.suit]
         } else {
             this.suit.spriteFrame = this.TexFaces[poker.point - 11]
         }
-        this.number.string = `${PONIT_MAP[poker.point + '']}`;
-        this.number.color = (poker.suit === SuitEnum.Clubs || poker.suit === SuitEnum.Spades) ? this.blackTextColor : this.redTextColor
         this.suitSmall.spriteFrame = this.suitListSmall[poker.suit]
         this.refresh()
     }

@@ -28,7 +28,7 @@ export class Poker {
         return this.parent?.IndexOfPokers(this)
     }
     public isConcatable(p: Poker): boolean {
-        return this.point === p.point + 1 && this.isSimilarSuit(p.suit)
+        return this.point === p.point + 1 && !this.isSimilarSuit(p.suit)
     }
     public isSimilarSuit(suit: SuitEnum) {
         return (suit + this.suit) % 2 === 0
@@ -44,6 +44,7 @@ export class PokerGroup {
     public pokers: Poker[] = [];
     public index = -1;
     public get top(): Poker { return this.pokers[this.pokers.length - 1]; }
+    public get bottom(): Poker { return this.pokers[0]; }
     public location: ELocation | null = null;
 
     public isPokerEmpty(): boolean { return this.pokers.length === 0 }
@@ -60,6 +61,13 @@ export class PokerGroup {
             return null
         }
     }
+    public GetPoker(index: number) {
+        if (!this.isPokerEmpty() && index >= -this.pokers.length) {
+            let i = index >= 0 ? index : this.pokers.length + index
+            return this.pokers[i]
+        }
+        return null;
+    }
     public IndexOfPokers(poker: Poker) {
         return this.pokers.indexOf(poker)
     }
@@ -74,6 +82,14 @@ export class PokerGroup {
             let temp = this.pokers[s]
             this.pokers[s] = this.pokers[e]
             this.pokers[e] = temp
+        }
+
+    }
+    public isConcatPoker(poker: Poker) {
+        if (this.isPokerEmpty()) {
+            return poker.point === 13
+        } else {
+            return this.top.isConcatable(poker)
         }
 
     }
@@ -104,7 +120,7 @@ class PlayPokerGroup extends PokerGroup {
     public RemovePoker(poker: Poker) {
 
         let p = super.RemovePoker(poker)
-        if (!this.isPokerEmpty()) {
+        if (!this.isPokerEmpty() && this.top.status === EpokerStatus.CLOSE) {
             this.top.status = EpokerStatus.OPEN
             ll.EventManager.getInstance().emit(GAME_EVENT.CS_FLIP_POKER, this.top)
         }
@@ -130,13 +146,7 @@ class OpenAreaGroup extends PokerGroup {
         poker.status = EpokerStatus.OPEN
         return poker
     }
-    public GetPoker(index: number) {
-        if (!this.isPokerEmpty() && index >= -this.pokers.length) {
-            let i = index >= 0 ? index : this.pokers.length + index
-            return this.pokers[i]
-        }
-        return null;
-    }
+
 }
 
 /**
@@ -253,7 +263,7 @@ export default class GameDB extends Model {
         }
         return false;
     }
-    // 是否在Open牌顶
+    // 是否在Receive牌顶
     public isIndexReceiveTop(poker: Poker): boolean {
         if (this.isLocationReceive(poker)) {
             let gp: ReceivePokerGroup = poker.parent
@@ -268,10 +278,34 @@ export default class GameDB extends Model {
         if (poker.status === EpokerStatus.OPEN) {
             if (this.isIndexPlayTop(poker)) {
                 this._pokerToReceive(poker, GAME_EVENT.CS_POKER_MOVE_FROM_PLAYAREA_TO_RECEIVEAREA);
+            } else {
+                // 非顶部，但是翻开的牌
+                // play区是否可以接受此牌
+                let parent: PokerGroup = poker.parent
+                for (let i = 0; i < GameDB.CONST_PLAY_GROUPS; i++) {
+                    let rpg: PlayPokerGroup = this._playAreaPokersGroup[i]
+                    if (rpg.isConcatPoker(poker)) {
+                        // 链接数据库
+                        let pokers: Poker[] = [];
+                        while (true) {
+                            let top = parent.PopPoker();
+                            top && pokers.push(top)
+                            if (top == poker) {
+                                break;
+                            }
+                        }
+                        for (let i = pokers.length - 1; i >= 0; i--) {
+                            let p: Poker = pokers[i]
+                            rpg.AddPoker(p)
+                        }
+                        this.emit(GAME_EVENT.CS_POKERS_MOVE_TO_PLAY, pokers)
+                        return
+                    }
+                }
             }
         }
     }
-    public OnPlayClosePokerClick(poker: Poker) {
+    public OnClosePokerClick(poker: Poker) {
         if (this.isIndexCloseTop(poker)) {
             let parent: ClosePokerGroup = poker.parent
             parent.RemovePoker(poker)
@@ -279,10 +313,29 @@ export default class GameDB extends Model {
             this.emit(GAME_EVENT.CS_POKER_MOVE_FROM_CLOSEAREA_TO_OPENAREA, poker)
         }
     }
-    public OnPlayOpenPokerClick(poker: Poker) {
+    public OnOpenPokerClick(poker: Poker) {
         if (poker.status === EpokerStatus.OPEN) {
             if (this.isIndexOpenTop(poker)) {
                 this._pokerToReceive(poker, GAME_EVENT.CS_POKER_MOVE_FROM_OPENAREA_TO_RECEIVEAREA)
+
+            }
+        }
+    }
+    // 收牌区点击
+    public OnReceivePokerClick(poker: Poker) {
+        if (poker.status === EpokerStatus.OPEN) {
+            if (this.isIndexReceiveTop(poker)) {
+                let parent: PokerGroup = poker.parent
+                for (let i = 0; i < GameDB.CONST_PLAY_GROUPS; i++) {
+                    let rpg: PlayPokerGroup = this._playAreaPokersGroup[i]
+                    if (rpg.isConcatPoker(poker)) {
+                        // 链接数据库
+                        parent.RemovePoker(poker)
+                        rpg.AddPoker(poker)
+                        this.emit(GAME_EVENT.CS_POKER_MOVE_TO_PLAY, poker)
+                        return
+                    }
+                }
             }
         }
     }
@@ -305,9 +358,11 @@ export default class GameDB extends Model {
     /********************************************
      * private  API
     ********************************************/
-    // poker移动到receive区
+    // poker移动到receive and play区
     private _pokerToReceive(poker: Poker, EventType: string) {
-        // 询问手牌区是否可以承接此牌
+        let parent: PokerGroup = poker.parent
+
+        // 询问收牌区是否可以承接此牌
         for (let i = 0; i < GameDB.CONST_RECEIVE_GROUPS; i++) {
             let rpg: ReceivePokerGroup = this._receiveAreaPokersGroup[i]
             if (rpg.isNextPoker(poker)) {
@@ -316,6 +371,17 @@ export default class GameDB extends Model {
                 parent.RemovePoker(poker)
                 rpg.AddPoker(poker)
                 this.emit(EventType, poker)
+                return
+            }
+        }
+        // play区是否可以接受此牌
+        for (let i = 0; i < GameDB.CONST_PLAY_GROUPS; i++) {
+            let rpg: PlayPokerGroup = this._playAreaPokersGroup[i]
+            if (rpg.isConcatPoker(poker)) {
+                // 链接数据库
+                parent.RemovePoker(poker)
+                rpg.AddPoker(poker)
+                this.emit(GAME_EVENT.CS_POKER_MOVE_TO_PLAY, poker)
                 return
             }
         }

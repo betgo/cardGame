@@ -6,6 +6,7 @@ export function Debounce(second: number) {
 
         let func = descriptor.value
         descriptor.value = function (...args: any[]) {
+
             clearTimeout(timeId)
             timeId = setTimeout(() => {
                 func.apply(this, args)
