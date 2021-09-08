@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, Label, Sprite, SpriteFrame, Color, color, SystemEventType, Event, systemEvent } from 'cc';
+import { _decorator, Component, Node, Label, Sprite, SpriteFrame, Color, color, SystemEventType, Event, systemEvent, EventTouch, Vec3, Vec2, v3, tween } from 'cc';
 import { EpokerStatus, SuitEnum } from '../../Config/ConfigEnum';
 import View from '../../Framework/MVC/View';
 import { Poker } from '../../Scene/GameScene/GameDB';
@@ -45,13 +45,17 @@ export class UIPoker extends View {
     public get poker() { return this._poker }
     private _poker: Poker = null!;
     private _view: GameView = null!;
+    private _isTouchStart = false;
+    private _isDragStart = false;
+    private _StarToDragSchedule: Function = null!;
+    private _DragStartPostion: Vec3 = null!;
+    private _TouchLocation: Vec2 | null = null;
     /********************************************
     * LifeCycle
     ********************************************/
     public start() {
 
     }
-
     onEnable() {
         // 注册触摸事件
         this.node.on(SystemEventType.TOUCH_START, this.onTouchStart, this)
@@ -103,13 +107,51 @@ export class UIPoker extends View {
     /********************************************
      * Event Handler
     ********************************************/
-    onTouchStart(_event: any) {
+    //TODO 实现拖拽
+    onTouchStart(_event: EventTouch) {
+        if (this._isTouchStart) return
+        this._isTouchStart = true
+        this._isDragStart = false
+        this._TouchLocation = _event.getLocation();
+        this._StarToDragSchedule = () => {
+            console.log(">>>>start Drag ");
+            this._DragStartPostion = this.node.position.clone()
+            this._isDragStart = true
+        }
+        this.scheduleOnce(this._StarToDragSchedule, 0.2)
+
+        console.log('touch!!');
 
     }
-    onTouchMove(_event: any) {
+    onTouchMove(_event: EventTouch) {
+        if (!this._isTouchStart) return;
+        if (this._isDragStart) {
+            if (this._TouchLocation === null) {
+                this._TouchLocation = _event.getLocation();
+            }
+            let newLocation = _event.getLocation();
+            let dx = newLocation.x - this._TouchLocation.x
+            let dy = newLocation.y - this._TouchLocation.y
+            // console.log('x: ', this._DragStartPostion.x + dx, ' y: ', this._DragStartPostion.y + dy);
 
+            this.node.setPosition(this._DragStartPostion.x + dx, this._DragStartPostion.y + dy)
+            // this.node.setWorldPosition(v3(this._DragStartPostion.x + dx, this._DragStartPostion.y + dy, 0))
+        }
     }
     onTouchEnd(_event: any) {
-        this._view.OnClickUIPoker(this)
+        console.log('end!!');
+
+        if (!this._isTouchStart) return;
+        this._isTouchStart = false;
+        this.unschedule(this._StarToDragSchedule)
+        this._TouchLocation = null;
+        // this._view.OnClickUIPoker(this)
+        //TODO 复位动画
+        if (this._isDragStart) {
+            this._isDragStart = false
+            tween(this.node)
+                .to(.2, { position: this._DragStartPostion })
+                .start()
+        }
     }
 }
